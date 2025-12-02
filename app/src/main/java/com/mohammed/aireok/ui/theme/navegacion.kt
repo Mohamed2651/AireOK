@@ -10,7 +10,7 @@ import androidx.navigation.compose.rememberNavController
 sealed class Pantalla(val ruta: String) {
     object Login : Pantalla("login")
     object Home : Pantalla("home")
-    object Perfil: Pantalla("perfil")
+    object Registro: Pantalla("registro")
     object Modificar: Pantalla("modificar")
 }
 
@@ -29,9 +29,10 @@ fun Navegacion(modifier: Modifier) {
             PantallaHome(navController, userViewModel)
         }
 
-        /*composable (Pantalla.Perfil.ruta ) {
-            PantallaPerfil(navController)
+        composable (Pantalla.Registro.ruta ) {
+            PantallaRegistro(navController, userViewModel)
         }
+        /*
         composable(Pantalla.Modificar.ruta) {
             ModificarDatos(navController)
         }*/

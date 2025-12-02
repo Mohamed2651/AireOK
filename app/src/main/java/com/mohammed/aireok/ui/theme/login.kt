@@ -1,5 +1,7 @@
 package com.mohammed.aireok.ui.theme
 
+import android.R.attr.top
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -45,7 +47,7 @@ fun PantallaLogin(navController: NavController, userViewModel: UserViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Text("Pantalla de Login")
+        Text("Bienvenido a AireOK")
         Spacer(Modifier.height(16.dp))
         Column(modifier = Modifier.padding(20.dp)) {
             OutlinedTextField(
@@ -81,6 +83,13 @@ fun PantallaLogin(navController: NavController, userViewModel: UserViewModel) {
                 modifier = Modifier
                     .padding(top = 10.dp)
                     .fillMaxWidth()
+            )
+
+            Text(text = "¿No estas regitrado? Registrate",
+                modifier = Modifier.padding(top = 10.dp)
+                    .clickable{
+                        navController.navigate(Pantalla.Registro.ruta)
+                    }
             )
         }
         // cuando se inicia sesión se borra la pantalla de login para que el usuario no vuelva
