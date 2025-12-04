@@ -1,5 +1,7 @@
 package com.mohammed.aireok.ui.theme
 
+import DataBaseCopier.insertarUsuario
+import android.content.Context
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -112,7 +114,10 @@ fun PantallaRegistro(navController: NavController, userViewModel: UserViewModel)
 
             val esValido = userViewModel.password == confirmpassword
             if (esValido) {
-                navController.navigate(Pantalla.Home.ruta) {
+                insertarUsuario(context, userViewModel.nombre, userViewModel.email, userViewModel.password)
+                userViewModel.actualizarNombre("")
+                userViewModel.actualizarPassword("")
+                navController.navigate(Pantalla.Login.ruta) {
                     popUpTo(Pantalla.Login.ruta) { inclusive = false }
                     launchSingleTop = true}
             } else {

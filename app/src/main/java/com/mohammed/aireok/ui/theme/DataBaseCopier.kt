@@ -6,6 +6,8 @@ object DataBaseCopier {
     fun copiar(context: Context, nombreDB: String) {
         val rutaDB = context.getDatabasePath(nombreDB)
 
+        if (rutaDB.exists()) return
+
         // Crear carpeta si no existe
         rutaDB.parentFile?.mkdirs()
 
@@ -23,4 +25,29 @@ object DataBaseCopier {
         output.close()
         input.close()
     }
+
+    fun insertarUsuario(
+        context: Context,
+        nombre: String,
+        email: String,
+        password: String,
+        rol: String = "registrado"
+    ): Boolean {
+
+        return try {
+            val db = context.openOrCreateDatabase("mi_base_datos.sqlite", Context.MODE_PRIVATE, null)
+            val insertSQL = """
+            INSERT INTO usuarios (nombre, email, contrasena_hash, rol)
+            VALUES (?, ?, ?, ?)
+        """.trimIndent()
+
+            db.execSQL(insertSQL, arrayOf(nombre, email, password, rol))
+            db.close()
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
 }

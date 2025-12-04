@@ -89,6 +89,8 @@ fun PantallaLogin(navController: NavController, userViewModel: UserViewModel) {
                 modifier = Modifier.padding(top = 10.dp)
                     .clickable{
                         navController.navigate(Pantalla.Registro.ruta)
+                        userViewModel.actualizarNombre("")
+                        userViewModel.actualizarPassword("")
                     }
             )
         }
@@ -100,7 +102,8 @@ fun PantallaLogin(navController: NavController, userViewModel: UserViewModel) {
              if (esValido) {
                  navController.navigate(Pantalla.Home.ruta) {
                      popUpTo(Pantalla.Login.ruta) { inclusive = false }
-                     launchSingleTop = true}
+                     launchSingleTop = true
+                 }
             } else {
                 mensaje= "Usuario o contraseña incorrectos"
             }
