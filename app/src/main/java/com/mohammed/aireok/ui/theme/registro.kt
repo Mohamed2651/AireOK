@@ -5,6 +5,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -13,9 +14,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Air
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Person
@@ -41,6 +42,10 @@ fun PantallaRegistro(navController: NavController, userViewModel: UserViewModel)
     var passwordHidden by rememberSaveable { mutableStateOf(true) }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
     val authState = userViewModel.authState
+    val isDark = isSystemInDarkTheme()
+
+    val gradientStart = if (isDark) Color(0xFF0A2E0D) else Color(0xFF1B5E20)
+    val gradientEnd   = if (isDark) Color(0xFF07255C) else Color(0xFF0D47A1)
 
     val passwordsMatch = userViewModel.password == confirmPassword || confirmPassword.isEmpty()
     val emailValido = android.util.Patterns.EMAIL_ADDRESS.matcher(userViewModel.email).matches()
@@ -51,34 +56,10 @@ fun PantallaRegistro(navController: NavController, userViewModel: UserViewModel)
             && userViewModel.password == confirmPassword
             && authState !is AuthState.Loading
 
-    val coloresInput = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = Color(0xFF1565C0),
-        unfocusedBorderColor = Color(0xFF90A4AE),
-        focusedLabelColor = Color(0xFF1565C0),
-        unfocusedLabelColor = Color(0xFF546E7A),
-        focusedLeadingIconColor = Color(0xFF1565C0),
-        unfocusedLeadingIconColor = Color(0xFF546E7A),
-        cursorColor = Color(0xFF1565C0),
-        focusedTextColor = Color(0xFF1A237E),
-        unfocusedTextColor = Color(0xFF263238)
-    )
-
-    LaunchedEffect(authState) {
-        if (authState is AuthState.Idle && userViewModel.email.isBlank()) {
-            // Registro exitoso - volver a login
-        }
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(Color(0xFF1B5E20), Color(0xFF0D47A1)),
-                    startY = 0f,
-                    endY = Float.POSITIVE_INFINITY
-                )
-            )
+            .background(Brush.verticalGradient(colors = listOf(gradientStart, gradientEnd)))
     ) {
         Column(
             modifier = Modifier
@@ -89,19 +70,12 @@ fun PantallaRegistro(navController: NavController, userViewModel: UserViewModel)
         ) {
             Spacer(Modifier.height(52.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = {
                     userViewModel.limpiarEstado()
                     navController.popBackStack()
                 }) {
-                    Icon(
-                        Icons.Filled.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = Color.White
-                    )
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver", tint = Color.White)
                 }
                 Spacer(Modifier.weight(1f))
                 Box(
@@ -119,17 +93,8 @@ fun PantallaRegistro(navController: NavController, userViewModel: UserViewModel)
 
             Spacer(Modifier.height(12.dp))
 
-            Text(
-                "Crear cuenta",
-                color = Color.White,
-                fontSize = 30.sp,
-                fontWeight = FontWeight.ExtraBold
-            )
-            Text(
-                "Únete a AireOK",
-                color = Color.White.copy(alpha = 0.75f),
-                fontSize = 14.sp
-            )
+            Text("Crear cuenta", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold)
+            Text("Únete a AireOK", color = Color.White.copy(alpha = 0.75f), fontSize = 14.sp)
 
             Spacer(Modifier.height(28.dp))
 
@@ -137,12 +102,23 @@ fun PantallaRegistro(navController: NavController, userViewModel: UserViewModel)
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(
                     modifier = Modifier.padding(28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    val coloresInput = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor    = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor  = MaterialTheme.colorScheme.outline,
+                        focusedLabelColor     = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor   = MaterialTheme.colorScheme.onSurfaceVariant,
+                        focusedLeadingIconColor   = MaterialTheme.colorScheme.primary,
+                        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        cursorColor           = MaterialTheme.colorScheme.primary,
+                        focusedTextColor      = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor    = MaterialTheme.colorScheme.onSurface,
+                    )
 
                     OutlinedTextField(
                         value = userViewModel.nombre,
@@ -186,7 +162,7 @@ fun PantallaRegistro(navController: NavController, userViewModel: UserViewModel)
                             IconButton(onClick = { passwordHidden = !passwordHidden }) {
                                 Icon(
                                     if (passwordHidden) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                                    null, tint = Color(0xFF546E7A)
+                                    null, tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         },
@@ -208,7 +184,7 @@ fun PantallaRegistro(navController: NavController, userViewModel: UserViewModel)
                             IconButton(onClick = { passwordHidden = !passwordHidden }) {
                                 Icon(
                                     if (passwordHidden) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                                    null, tint = Color(0xFF546E7A)
+                                    null, tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         },
@@ -222,19 +198,13 @@ fun PantallaRegistro(navController: NavController, userViewModel: UserViewModel)
                         colors = coloresInput
                     )
 
-                    AnimatedVisibility(
-                        visible = authState is AuthState.Error,
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
+                    AnimatedVisibility(visible = authState is AuthState.Error, enter = fadeIn(), exit = fadeOut()) {
                         Text(
                             text = (authState as? AuthState.Error)?.message ?: "",
                             color = MaterialTheme.colorScheme.error,
                             fontSize = 13.sp,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 10.dp)
+                            modifier = Modifier.fillMaxWidth().padding(top = 10.dp)
                         )
                     }
 
@@ -249,27 +219,17 @@ fun PantallaRegistro(navController: NavController, userViewModel: UserViewModel)
                             }
                         },
                         enabled = formularioValido,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF1565C0),
-                            disabledContainerColor = Color(0xFF1565C0).copy(alpha = 0.4f)
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
                         )
                     ) {
                         if (authState is AuthState.Loading) {
-                            CircularProgressIndicator(
-                                color = Color.White,
-                                modifier = Modifier.size(22.dp),
-                                strokeWidth = 2.5.dp
-                            )
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(22.dp), strokeWidth = 2.5.dp)
                         } else {
-                            Text(
-                                "Crear cuenta",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 16.sp
-                            )
+                            Text("Crear cuenta", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                         }
                     }
 
@@ -279,10 +239,10 @@ fun PantallaRegistro(navController: NavController, userViewModel: UserViewModel)
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        Text("¿Ya tienes cuenta?  ", color = Color.Gray, fontSize = 14.sp)
+                        Text("¿Ya tienes cuenta?  ", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
                         Text(
                             "Inicia sesión",
-                            color = Color(0xFF1565C0),
+                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             modifier = Modifier.clickable {

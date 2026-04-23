@@ -7,6 +7,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mohammed.aireok.data.TokenManager
+import com.mohammed.aireok.network.AuthHolder
+import com.mohammed.aireok.network.EstacionBusquedaResponse
 import com.mohammed.aireok.network.EstacionResponse
 import com.mohammed.aireok.network.LoginRequest
 import com.mohammed.aireok.network.RegistroRequest
@@ -37,6 +39,8 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
 
     var usuarioNombre by mutableStateOf("")
         private set
+    var usuarioEmail by mutableStateOf("")
+        private set
 
     var estaciones: List<EstacionResponse> by mutableStateOf(emptyList())
         private set
@@ -55,7 +59,9 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val response = RetrofitClient.api.login(LoginRequest(email, password))
                 tokenManager.saveSession(response.token, response.usuario.nombre, response.usuario.email)
+                AuthHolder.token = response.token
                 usuarioNombre = response.usuario.nombre
+                usuarioEmail = response.usuario.email
                 authState = AuthState.Success(response.usuario.nombre)
                 onSuccess()
             } catch (e: HttpException) {
@@ -93,7 +99,9 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
     fun logout(onSuccess: () -> Unit) {
         viewModelScope.launch {
             tokenManager.clearSession()
+            AuthHolder.token = ""
             usuarioNombre = ""
+            usuarioEmail = ""
             email = ""
             password = ""
             nombre = ""
@@ -107,6 +115,68 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
         email = ""
         password = ""
         nombre = ""
+    }
+
+    var todasEstaciones: List<EstacionResponse> by mutableStateOf(emptyList())
+        private set
+    var cargandoMapa by mutableStateOf(false)
+        private set
+
+    fun cargarEstacionesMapa() {
+        if (cargandoMapa || todasEstaciones.isNotEmpty()) return
+        viewModelScope.launch {
+            cargandoMapa = true
+            try {
+                todasEstaciones = RetrofitClient.api.estaciones()
+            } catch (e: Exception) {
+                // silently ignored — map stays empty
+            } finally {
+                cargandoMapa = false
+            }
+        }
+    }
+
+    var resultadosBusqueda: List<EstacionBusquedaResponse> by mutableStateOf(emptyList())
+        private set
+    var cargandoBusqueda by mutableStateOf(false)
+        private set
+    var errorBusqueda: String? by mutableStateOf(null)
+        private set
+    var icasBusqueda: Map<Int, Int?> by mutableStateOf(emptyMap())
+        private set
+
+    fun buscarEstaciones(query: String) {
+        if (query.isBlank()) { resultadosBusqueda = emptyList(); return }
+        viewModelScope.launch {
+            cargandoBusqueda = true
+            errorBusqueda = null
+            icasBusqueda = emptyMap()
+            try {
+                val resultados = RetrofitClient.api.buscarEstacion(query)
+                resultadosBusqueda = resultados
+                // Fetch real ICA for each result in parallel
+                resultados.forEach { estacion ->
+                    val uid = estacion.uid ?: return@forEach
+                    launch {
+                        try {
+                            val detalle = RetrofitClient.api.estacion(uid.toString())
+                            icasBusqueda = icasBusqueda + (uid to detalle.ica)
+                        } catch (_: Exception) {}
+                    }
+                }
+            } catch (e: Exception) {
+                errorBusqueda = "No se encontraron resultados"
+                resultadosBusqueda = emptyList()
+            } finally {
+                cargandoBusqueda = false
+            }
+        }
+    }
+
+    fun limpiarBusqueda() {
+        resultadosBusqueda = emptyList()
+        errorBusqueda = null
+        icasBusqueda = emptyMap()
     }
 
     fun cargarEstaciones() {

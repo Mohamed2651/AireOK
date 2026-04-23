@@ -5,6 +5,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -33,12 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
-private val AzulPrimario = Color(0xFF1565C0)
-private val AzulOscuro = Color(0xFF0D47A1)
-private val VerdeAire = Color(0xFF00897B)
-private val GrisBorde = Color(0xFF90A4AE)
-private val GrisTexto = Color(0xFF546E7A)
-
 private fun esEmailValido(email: String) =
     android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
 
@@ -47,6 +42,10 @@ fun PantallaLogin(navController: NavController, userViewModel: UserViewModel) {
     var passwordHidden by remember { mutableStateOf(true) }
     val authState = userViewModel.authState
     val emailValido = esEmailValido(userViewModel.email)
+    val isDark = isSystemInDarkTheme()
+
+    val gradientStart = if (isDark) Color(0xFF07255C) else Color(0xFF0D47A1)
+    val gradientEnd   = if (isDark) Color(0xFF00433A) else Color(0xFF00897B)
 
     LaunchedEffect(authState) {
         if (authState is AuthState.Success) {
@@ -59,13 +58,7 @@ fun PantallaLogin(navController: NavController, userViewModel: UserViewModel) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(AzulOscuro, VerdeAire),
-                    startY = 0f,
-                    endY = Float.POSITIVE_INFINITY
-                )
-            )
+            .background(Brush.verticalGradient(colors = listOf(gradientStart, gradientEnd)))
     ) {
         Column(
             modifier = Modifier
@@ -84,28 +77,13 @@ fun PantallaLogin(navController: NavController, userViewModel: UserViewModel) {
                     .background(Color.White.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Air,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(52.dp)
-                )
+                Icon(Icons.Filled.Air, null, tint = Color.White, modifier = Modifier.size(52.dp))
             }
 
             Spacer(Modifier.height(16.dp))
 
-            Text(
-                "AireOK",
-                color = Color.White,
-                fontSize = 38.sp,
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 1.sp
-            )
-            Text(
-                "Calidad del aire en tiempo real",
-                color = Color.White.copy(alpha = 0.75f),
-                fontSize = 14.sp
-            )
+            Text("AireOK", color = Color.White, fontSize = 38.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
+            Text("Calidad del aire en tiempo real", color = Color.White.copy(alpha = 0.75f), fontSize = 14.sp)
 
             Spacer(Modifier.height(40.dp))
 
@@ -113,7 +91,7 @@ fun PantallaLogin(navController: NavController, userViewModel: UserViewModel) {
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(
                     modifier = Modifier.padding(28.dp),
@@ -123,24 +101,40 @@ fun PantallaLogin(navController: NavController, userViewModel: UserViewModel) {
                         "Bienvenido",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = AzulOscuro
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         "Inicia sesión para continuar",
                         fontSize = 13.sp,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 4.dp)
                     )
 
                     Spacer(Modifier.height(24.dp))
+
+                    val coloresInput = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor    = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor  = MaterialTheme.colorScheme.outline,
+                        focusedLabelColor     = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor   = MaterialTheme.colorScheme.onSurfaceVariant,
+                        focusedLeadingIconColor   = MaterialTheme.colorScheme.primary,
+                        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        cursorColor           = MaterialTheme.colorScheme.primary,
+                        focusedTextColor      = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor    = MaterialTheme.colorScheme.onSurface,
+                    )
 
                     OutlinedTextField(
                         value = userViewModel.email,
                         onValueChange = { userViewModel.actualizarEmail(it) },
                         label = { Text("Email") },
                         leadingIcon = {
-                            Icon(Icons.Outlined.Email, null,
-                                tint = if (emailValido || userViewModel.email.isEmpty()) AzulPrimario else MaterialTheme.colorScheme.error)
+                            Icon(
+                                Icons.Outlined.Email, null,
+                                tint = if (emailValido || userViewModel.email.isEmpty())
+                                    MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.error
+                            )
                         },
                         singleLine = true,
                         isError = userViewModel.email.isNotEmpty() && !emailValido,
@@ -151,17 +145,7 @@ fun PantallaLogin(navController: NavController, userViewModel: UserViewModel) {
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AzulPrimario,
-                            unfocusedBorderColor = GrisBorde,
-                            focusedLabelColor = AzulPrimario,
-                            unfocusedLabelColor = GrisTexto,
-                            focusedLeadingIconColor = AzulPrimario,
-                            unfocusedLeadingIconColor = GrisTexto,
-                            cursorColor = AzulPrimario,
-                            focusedTextColor = Color(0xFF1A237E),
-                            unfocusedTextColor = Color(0xFF263238)
-                        )
+                        colors = coloresInput
                     )
 
                     Spacer(Modifier.height(14.dp))
@@ -170,48 +154,30 @@ fun PantallaLogin(navController: NavController, userViewModel: UserViewModel) {
                         value = userViewModel.password,
                         onValueChange = { userViewModel.actualizarPassword(it) },
                         label = { Text("Contraseña") },
-                        leadingIcon = {
-                            Icon(Icons.Outlined.Lock, null, tint = AzulPrimario)
-                        },
+                        leadingIcon = { Icon(Icons.Outlined.Lock, null, tint = MaterialTheme.colorScheme.primary) },
                         visualTransformation = if (passwordHidden) PasswordVisualTransformation() else VisualTransformation.None,
                         trailingIcon = {
                             IconButton(onClick = { passwordHidden = !passwordHidden }) {
                                 Icon(
-                                    imageVector = if (passwordHidden) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                                    contentDescription = null,
-                                    tint = GrisTexto
+                                    if (passwordHidden) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                    null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AzulPrimario,
-                            unfocusedBorderColor = GrisBorde,
-                            focusedLabelColor = AzulPrimario,
-                            unfocusedLabelColor = GrisTexto,
-                            focusedLeadingIconColor = AzulPrimario,
-                            unfocusedLeadingIconColor = GrisTexto,
-                            cursorColor = AzulPrimario,
-                            focusedTextColor = Color(0xFF1A237E),
-                            unfocusedTextColor = Color(0xFF263238)
-                        )
+                        colors = coloresInput
                     )
 
-                    AnimatedVisibility(
-                        visible = authState is AuthState.Error,
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
+                    AnimatedVisibility(visible = authState is AuthState.Error, enter = fadeIn(), exit = fadeOut()) {
                         Text(
                             text = (authState as? AuthState.Error)?.message ?: "",
                             color = MaterialTheme.colorScheme.error,
                             fontSize = 13.sp,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 10.dp)
+                            modifier = Modifier.fillMaxWidth().padding(top = 10.dp)
                         )
                     }
 
@@ -219,30 +185,18 @@ fun PantallaLogin(navController: NavController, userViewModel: UserViewModel) {
 
                     Button(
                         onClick = { userViewModel.login {} },
-                        enabled = emailValido
-                                && userViewModel.password.isNotBlank()
-                                && authState !is AuthState.Loading,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
+                        enabled = emailValido && userViewModel.password.isNotBlank() && authState !is AuthState.Loading,
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = AzulPrimario,
-                            disabledContainerColor = AzulPrimario.copy(alpha = 0.4f)
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
                         )
                     ) {
                         if (authState is AuthState.Loading) {
-                            CircularProgressIndicator(
-                                color = Color.White,
-                                modifier = Modifier.size(22.dp),
-                                strokeWidth = 2.5.dp
-                            )
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(22.dp), strokeWidth = 2.5.dp)
                         } else {
-                            Text(
-                                "Iniciar sesión",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 16.sp
-                            )
+                            Text("Iniciar sesión", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                         }
                     }
 
@@ -253,10 +207,10 @@ fun PantallaLogin(navController: NavController, userViewModel: UserViewModel) {
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("¿No tienes cuenta?  ", color = Color.Gray, fontSize = 14.sp)
+                        Text("¿No tienes cuenta?  ", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
                         Text(
                             "Regístrate",
-                            color = AzulPrimario,
+                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             modifier = Modifier.clickable {
