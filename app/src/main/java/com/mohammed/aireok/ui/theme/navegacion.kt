@@ -34,6 +34,7 @@ sealed class Pantalla(val ruta: String) {
     object Buscar : Pantalla("buscar")
     object Mapa : Pantalla("mapa")
     object Perfil : Pantalla("perfil")
+    object Consejos : Pantalla("consejos")
     object Estacion : Pantalla("estacion/{uid}") {
         fun conUid(uid: String) = "estacion/$uid"
     }
@@ -52,7 +53,8 @@ private val rutasConShell = setOf(
     Pantalla.Home.ruta,
     Pantalla.Buscar.ruta,
     Pantalla.Mapa.ruta,
-    Pantalla.Perfil.ruta
+    Pantalla.Perfil.ruta,
+    Pantalla.Consejos.ruta
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,10 +69,8 @@ fun Navegacion(modifier: Modifier) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    // Cerrar siempre el drawer al salir del shell (login/registro),
-    // así al volver a entrar nunca aparece abierto
-    LaunchedEffect(mostrarShell) {
-        if (!mostrarShell) drawerState.close()
+    LaunchedEffect(currentRoute) {
+        drawerState.close()
     }
 
     ModalNavigationDrawer(
@@ -112,6 +112,7 @@ fun Navegacion(modifier: Modifier) {
                 composable(Pantalla.Buscar.ruta) { PantallaBuscar(navController, userViewModel) }
                 composable(Pantalla.Mapa.ruta) { PantallaMapa(navController, userViewModel) }
                 composable(Pantalla.Perfil.ruta) { PantallaPerfil(navController, userViewModel) }
+                composable(Pantalla.Consejos.ruta) { PantallaConsejos() }
                 composable(
                     route = Pantalla.Estacion.ruta,
                     arguments = listOf(navArgument("uid") { type = NavType.StringType })
@@ -132,11 +133,12 @@ private fun AireOKTopAppBar(
     scope: CoroutineScope
 ) {
     val titulo = when (currentRoute) {
-        Pantalla.Home.ruta   -> "AireOK"
-        Pantalla.Buscar.ruta -> "Buscar Estaciones"
-        Pantalla.Mapa.ruta   -> "Mapa"
-        Pantalla.Perfil.ruta -> "Mi Perfil"
-        else                 -> "AireOK"
+        Pantalla.Home.ruta     -> "AireOK"
+        Pantalla.Buscar.ruta   -> "Buscar Estaciones"
+        Pantalla.Mapa.ruta     -> "Mapa"
+        Pantalla.Perfil.ruta   -> "Mi Perfil"
+        Pantalla.Consejos.ruta -> "Consejos Ecológicos"
+        else                   -> "AireOK"
     }
     TopAppBar(
         title = {
@@ -303,13 +305,25 @@ private fun MenuLateral(
         )
 
         NavigationDrawerItem(
-            icon = { Icon(Icons.Filled.Logout, null) },
-            label = { Text("Cerrar sesión") },
-            selected = false,
-            onClick = { mostrarCerrarSesion = true },
+            icon = { Icon(Icons.Filled.Eco, null) },
+            label = { Text("Consejos Ecológicos") },
+            selected = currentRoute == Pantalla.Consejos.ruta,
+            onClick = {
+                scope.launch { drawerState.close() }
+                if (currentRoute != Pantalla.Consejos.ruta) {
+                    navController.navigate(Pantalla.Consejos.ruta) {
+                        popUpTo(Pantalla.Home.ruta) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            },
             colors = NavigationDrawerItemDefaults.colors(
-                unselectedIconColor = MaterialTheme.colorScheme.error,
-                unselectedTextColor = MaterialTheme.colorScheme.error
+                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
             ),
             modifier = Modifier.padding(horizontal = 12.dp)
         )
@@ -322,6 +336,18 @@ private fun MenuLateral(
             colors = NavigationDrawerItemDefaults.colors(
                 unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            modifier = Modifier.padding(horizontal = 12.dp)
+        )
+
+        NavigationDrawerItem(
+            icon = { Icon(Icons.Filled.Logout, null) },
+            label = { Text("Cerrar sesión") },
+            selected = false,
+            onClick = { mostrarCerrarSesion = true },
+            colors = NavigationDrawerItemDefaults.colors(
+                unselectedIconColor = MaterialTheme.colorScheme.error,
+                unselectedTextColor = MaterialTheme.colorScheme.error
             ),
             modifier = Modifier.padding(horizontal = 12.dp)
         )

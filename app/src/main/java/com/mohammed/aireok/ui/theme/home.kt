@@ -2,6 +2,7 @@ package com.mohammed.aireok.ui.theme
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -22,14 +23,37 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.LocationManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import com.mohammed.aireok.network.EstacionResponse
+import kotlin.math.roundToInt
 import kotlin.system.exitProcess
 
+@SuppressLint("MissingPermission")
 @Composable
 fun PantallaHome(navController: NavController, userViewModel: UserViewModel) {
+    val context = LocalContext.current
     var mostrarDialogo by remember { mutableStateOf(false) }
+    var userLocation by remember { mutableStateOf<android.location.Location?>(null) }
 
-    LaunchedEffect(Unit) { userViewModel.cargarEstaciones() }
+    LaunchedEffect(Unit) {
+        userViewModel.cargarEstaciones()
+        val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        if (hasFine || hasCoarse) {
+            try {
+                val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                userLocation = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                    ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                    ?: lm.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER)
+            } catch (_: Exception) {}
+        }
+    }
 
     BackHandler { mostrarDialogo = true }
 
@@ -152,8 +176,28 @@ fun PantallaHome(navController: NavController, userViewModel: UserViewModel) {
             Text(userViewModel.errorEstaciones!!, color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
         }
 
-        userViewModel.estaciones.forEach { estacion ->
-            EstacionCard(estacion) {
+        val loc = userLocation
+        val estacionesOrdenadas = if (loc != null) {
+            userViewModel.estaciones.sortedBy { e ->
+                val lat = e.latDouble ?: return@sortedBy Double.MAX_VALUE
+                val lon = e.lonDouble ?: return@sortedBy Double.MAX_VALUE
+                android.location.Location("").apply { latitude = lat; longitude = lon }
+                    .let { loc.distanceTo(it).toDouble() }
+            }
+        } else {
+            userViewModel.estaciones
+        }
+        estacionesOrdenadas.forEachIndexed { index, estacion ->
+            val etiquetaCercana: String? = if (index == 0 && loc != null) {
+                val lat = estacion.latDouble
+                val lon = estacion.lonDouble
+                if (lat != null && lon != null) {
+                    val stLoc = android.location.Location("").apply { latitude = lat; longitude = lon }
+                    val distKm = loc.distanceTo(stLoc) / 1000.0
+                    if (distKm <= 20.0) "Tu zona" else "Más cercana (~${distKm.roundToInt()} km)"
+                } else null
+            } else null
+            EstacionCard(estacion, etiquetaCercana) {
                 val uid = estacion.resolvedUid
                 if (uid.isNotBlank()) navController.navigate(Pantalla.Estacion.conUid(uid))
             }
@@ -185,7 +229,7 @@ private fun etiquetaIca(ica: Int?): String = when {
 }
 
 @Composable
-private fun EstacionCard(estacion: EstacionResponse, onClick: () -> Unit) {
+private fun EstacionCard(estacion: EstacionResponse, etiquetaCercana: String? = null, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(14.dp),
@@ -197,19 +241,33 @@ private fun EstacionCard(estacion: EstacionResponse, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             val color = colorIca(estacion.ica)
-            Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(color.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = estacion.ica?.toString() ?: "—",
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 16.sp,
-                    color = color
-                )
+            Box {
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(color.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = estacion.ica?.toString() ?: "—",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 16.sp,
+                        color = color
+                    )
+                }
+                if (estacion.datosFrescos) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .align(Alignment.BottomEnd)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surface)
+                            .padding(2.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF4CAF50))
+                    )
+                }
             }
             Spacer(Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -222,15 +280,22 @@ private fun EstacionCard(estacion: EstacionResponse, onClick: () -> Unit) {
                     maxLines = 1
                 )
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (etiquetaCercana != null) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                                .padding(horizontal = 4.dp, vertical = 1.dp)
+                        ) {
+                            Text(etiquetaCercana, fontSize = 10.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
                     Text(
                         partes.drop(1).joinToString(",").trim().ifBlank { "España" },
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1
                     )
-                    if (estacion.datosFrescos) {
-                        Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFF4CAF50)))
-                    }
                 }
             }
             Box(

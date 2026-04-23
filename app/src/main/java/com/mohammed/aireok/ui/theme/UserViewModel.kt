@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.mohammed.aireok.data.FavoritosManager
 import com.mohammed.aireok.data.TokenManager
 import com.mohammed.aireok.network.AuthHolder
 import com.mohammed.aireok.network.EstacionBusquedaResponse
@@ -26,6 +27,7 @@ sealed class AuthState {
 class UserViewModel(application: Application) : AndroidViewModel(application) {
 
     private val tokenManager = TokenManager(application)
+    private val favoritosManager = FavoritosManager(application)
 
     var email by mutableStateOf("")
         private set
@@ -63,6 +65,7 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
                 usuarioNombre = response.usuario.nombre
                 usuarioEmail = response.usuario.email
                 authState = AuthState.Success(response.usuario.nombre)
+                cargarFavoritos()
                 onSuccess()
             } catch (e: HttpException) {
                 val code = e.code()
@@ -106,6 +109,8 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
             password = ""
             nombre = ""
             authState = AuthState.Idle
+            favoritosUids = emptySet()
+            estacionesFavoritas = emptyList()
             onSuccess()
         }
     }
@@ -144,6 +149,8 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
         private set
     var icasBusqueda: Map<Int, Int?> by mutableStateOf(emptyMap())
         private set
+    var datosFrescoBusqueda: Map<Int, Boolean> by mutableStateOf(emptyMap())
+        private set
 
     fun buscarEstaciones(query: String) {
         if (query.isBlank()) { resultadosBusqueda = emptyList(); return }
@@ -151,6 +158,7 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
             cargandoBusqueda = true
             errorBusqueda = null
             icasBusqueda = emptyMap()
+            datosFrescoBusqueda = emptyMap()
             try {
                 val resultados = RetrofitClient.api.buscarEstacion(query)
                 resultadosBusqueda = resultados
@@ -161,7 +169,10 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
                         try {
                             val detalle = RetrofitClient.api.estacion(uid.toString())
                             icasBusqueda = icasBusqueda + (uid to detalle.ica)
-                        } catch (_: Exception) {}
+                            datosFrescoBusqueda = datosFrescoBusqueda + (uid to detalle.datosFrescos)
+                        } catch (_: Exception) {
+                            icasBusqueda = icasBusqueda + (uid to null)
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -177,6 +188,7 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
         resultadosBusqueda = emptyList()
         errorBusqueda = null
         icasBusqueda = emptyMap()
+        datosFrescoBusqueda = emptyMap()
     }
 
     fun cargarEstaciones() {
@@ -185,12 +197,55 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
             cargandoEstaciones = true
             errorEstaciones = null
             try {
-                estaciones = RetrofitClient.api.estaciones().take(12)
+                estaciones = RetrofitClient.api.estaciones().take(20)
             } catch (e: Exception) {
                 errorEstaciones = "No se pudieron cargar las estaciones"
             } finally {
                 cargandoEstaciones = false
             }
+        }
+    }
+
+    // ── Favoritos ─────────────────────────────────────────────────────────────
+
+    var favoritosUids: Set<String> by mutableStateOf(emptySet())
+        private set
+    var estacionesFavoritas: List<EstacionResponse> by mutableStateOf(emptyList())
+        private set
+    var cargandoFavoritos by mutableStateOf(false)
+        private set
+
+    fun cargarFavoritos() {
+        val email = usuarioEmail.ifBlank { return }
+        favoritosUids = favoritosManager.obtenerUids(email)
+    }
+
+    fun esFavorito(uid: String): Boolean = uid in favoritosUids
+
+    fun toggleFavorito(uid: String, estacion: EstacionResponse) {
+        val email = usuarioEmail.ifBlank { return }
+        if (favoritosManager.esFavorito(email, uid)) {
+            favoritosManager.quitar(email, uid)
+            estacionesFavoritas = estacionesFavoritas.filter { it.resolvedUid != uid }
+        } else {
+            favoritosManager.agregar(email, uid)
+            estacionesFavoritas = estacionesFavoritas + estacion
+        }
+        favoritosUids = favoritosManager.obtenerUids(email)
+    }
+
+    fun cargarEstacionesFavoritas() {
+        val email = usuarioEmail.ifBlank { return }
+        val uids = favoritosManager.obtenerUids(email)
+        favoritosUids = uids
+        if (uids.isEmpty()) { estacionesFavoritas = emptyList(); return }
+        if (cargandoFavoritos) return
+        viewModelScope.launch {
+            cargandoFavoritos = true
+            estacionesFavoritas = uids.mapNotNull { uid ->
+                try { RetrofitClient.api.estacion(uid) } catch (_: Exception) { null }
+            }
+            cargandoFavoritos = false
         }
     }
 }
