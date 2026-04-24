@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(export JAVA_HOME=\"/c/Program Files/Android/Android Studio/jbr\")",
+      "Bash(./gradlew assembleDebug)",
+      "Bash(curl *)",
+      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); print\\(f'Total estaciones: {len\\(data\\)}'\\); madrid=[e for e in data if 'madrid' in e.get\\('nombre',''\\).lower\\(\\)]; valencia=[e for e in data if 'valencia' in e.get\\('nombre',''\\).lower\\(\\)]; print\\(f'Madrid: {len\\(madrid\\)}, Valencia: {len\\(valencia\\)}'\\); print\\('\\\\nPrimeras 5:'\\); [print\\(e\\) for e in data[:5]]\")",
+      "Bash(node *)"
+    ]
+  }
+}

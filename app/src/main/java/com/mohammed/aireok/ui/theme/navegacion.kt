@@ -35,6 +35,7 @@ sealed class Pantalla(val ruta: String) {
     object Mapa : Pantalla("mapa")
     object Perfil : Pantalla("perfil")
     object Consejos : Pantalla("consejos")
+    object Favoritos : Pantalla("favoritos")
     object Estacion : Pantalla("estacion/{uid}") {
         fun conUid(uid: String) = "estacion/$uid"
     }
@@ -54,7 +55,8 @@ private val rutasConShell = setOf(
     Pantalla.Buscar.ruta,
     Pantalla.Mapa.ruta,
     Pantalla.Perfil.ruta,
-    Pantalla.Consejos.ruta
+    Pantalla.Consejos.ruta,
+    Pantalla.Favoritos.ruta
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -113,12 +115,13 @@ fun Navegacion(modifier: Modifier) {
                 composable(Pantalla.Mapa.ruta) { PantallaMapa(navController, userViewModel) }
                 composable(Pantalla.Perfil.ruta) { PantallaPerfil(navController, userViewModel) }
                 composable(Pantalla.Consejos.ruta) { PantallaConsejos() }
+                composable(Pantalla.Favoritos.ruta) { PantallaFavoritos(navController, userViewModel) }
                 composable(
                     route = Pantalla.Estacion.ruta,
                     arguments = listOf(navArgument("uid") { type = NavType.StringType })
                 ) { backStackEntry ->
                     val uid = backStackEntry.arguments?.getString("uid") ?: return@composable
-                    PantallaEstacion(navController, uid)
+                    PantallaEstacion(navController, uid, userViewModel)
                 }
             }
         }
@@ -137,8 +140,9 @@ private fun AireOKTopAppBar(
         Pantalla.Buscar.ruta   -> "Buscar Estaciones"
         Pantalla.Mapa.ruta     -> "Mapa"
         Pantalla.Perfil.ruta   -> "Mi Perfil"
-        Pantalla.Consejos.ruta -> "Consejos Ecológicos"
-        else                   -> "AireOK"
+        Pantalla.Consejos.ruta   -> "Consejos Ecológicos"
+        Pantalla.Favoritos.ruta  -> "Favoritos"
+        else                     -> "AireOK"
     }
     TopAppBar(
         title = {
@@ -234,7 +238,7 @@ private fun MenuLateral(
                 .fillMaxWidth()
                 .background(
                     Brush.horizontalGradient(
-                        colors = listOf(Color(0xFF0D47A1), Color(0xFF00897B))
+                        colors = listOf(Color(0xFF0D47A1), greenBlue)
                     )
                 )
                 .padding(24.dp)
@@ -312,6 +316,30 @@ private fun MenuLateral(
                 scope.launch { drawerState.close() }
                 if (currentRoute != Pantalla.Consejos.ruta) {
                     navController.navigate(Pantalla.Consejos.ruta) {
+                        popUpTo(Pantalla.Home.ruta) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            },
+            colors = NavigationDrawerItemDefaults.colors(
+                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            modifier = Modifier.padding(horizontal = 12.dp)
+        )
+
+        NavigationDrawerItem(
+            icon = { Icon(Icons.Filled.Favorite, null) },
+            label = { Text("Favoritos") },
+            selected = currentRoute == Pantalla.Favoritos.ruta,
+            onClick = {
+                scope.launch { drawerState.close() }
+                if (currentRoute != Pantalla.Favoritos.ruta) {
+                    navController.navigate(Pantalla.Favoritos.ruta) {
                         popUpTo(Pantalla.Home.ruta) { saveState = true }
                         launchSingleTop = true
                         restoreState = true

@@ -6,11 +6,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.mohammed.aireok.data.FavoritosManager
 import com.mohammed.aireok.data.TokenManager
 import com.mohammed.aireok.network.AuthHolder
 import com.mohammed.aireok.network.EstacionBusquedaResponse
 import com.mohammed.aireok.network.EstacionResponse
+import com.mohammed.aireok.network.AgregarFavoritoRequest
 import com.mohammed.aireok.network.LoginRequest
 import com.mohammed.aireok.network.RegistroRequest
 import com.mohammed.aireok.network.RetrofitClient
@@ -27,7 +27,6 @@ sealed class AuthState {
 class UserViewModel(application: Application) : AndroidViewModel(application) {
 
     private val tokenManager = TokenManager(application)
-    private val favoritosManager = FavoritosManager(application)
 
     var email by mutableStateOf("")
         private set
@@ -216,36 +215,55 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
         private set
 
     fun cargarFavoritos() {
-        val email = usuarioEmail.ifBlank { return }
-        favoritosUids = favoritosManager.obtenerUids(email)
+        cargarEstacionesFavoritas()
     }
 
     fun esFavorito(uid: String): Boolean = uid in favoritosUids
 
     fun toggleFavorito(uid: String, estacion: EstacionResponse) {
-        val email = usuarioEmail.ifBlank { return }
-        if (favoritosManager.esFavorito(email, uid)) {
-            favoritosManager.quitar(email, uid)
+        if (AuthHolder.token.isBlank()) return
+        val eraFavorito = uid in favoritosUids
+        // Actualización optimista
+        if (eraFavorito) {
+            favoritosUids = favoritosUids - uid
             estacionesFavoritas = estacionesFavoritas.filter { it.resolvedUid != uid }
         } else {
-            favoritosManager.agregar(email, uid)
+            favoritosUids = favoritosUids + uid
             estacionesFavoritas = estacionesFavoritas + estacion
         }
-        favoritosUids = favoritosManager.obtenerUids(email)
+        viewModelScope.launch {
+            try {
+                if (eraFavorito) {
+                    RetrofitClient.api.eliminarFavorito(uid)
+                } else {
+                    RetrofitClient.api.agregarFavorito(AgregarFavoritoRequest(uid))
+                }
+            } catch (_: Exception) {
+                // Revertir si la llamada falla
+                if (eraFavorito) {
+                    favoritosUids = favoritosUids + uid
+                    estacionesFavoritas = estacionesFavoritas + estacion
+                } else {
+                    favoritosUids = favoritosUids - uid
+                    estacionesFavoritas = estacionesFavoritas.filter { it.resolvedUid != uid }
+                }
+            }
+        }
     }
 
     fun cargarEstacionesFavoritas() {
-        val email = usuarioEmail.ifBlank { return }
-        val uids = favoritosManager.obtenerUids(email)
-        favoritosUids = uids
-        if (uids.isEmpty()) { estacionesFavoritas = emptyList(); return }
+        if (AuthHolder.token.isBlank()) return
         if (cargandoFavoritos) return
         viewModelScope.launch {
             cargandoFavoritos = true
-            estacionesFavoritas = uids.mapNotNull { uid ->
-                try { RetrofitClient.api.estacion(uid) } catch (_: Exception) { null }
+            try {
+                val lista = RetrofitClient.api.obtenerFavoritos()
+                estacionesFavoritas = lista
+                favoritosUids = lista.map { it.resolvedUid }.toSet()
+            } catch (_: Exception) {
+            } finally {
+                cargandoFavoritos = false
             }
-            cargandoFavoritos = false
         }
     }
 }

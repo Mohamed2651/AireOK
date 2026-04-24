@@ -45,7 +45,7 @@ fun PantallaLogin(navController: NavController, userViewModel: UserViewModel) {
     val isDark = isSystemInDarkTheme()
 
     val gradientStart = if (isDark) Color(0xFF07255C) else Color(0xFF0D47A1)
-    val gradientEnd   = if (isDark) Color(0xFF00433A) else Color(0xFF00897B)
+    val gradientEnd   = if (isDark) Color(0xFF00433A) else greenBlue
 
     LaunchedEffect(authState) {
         if (authState is AuthState.Success) {

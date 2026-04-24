@@ -145,15 +145,15 @@ fun PantallaHome(navController: NavController, userViewModel: UserViewModel) {
         Spacer(Modifier.height(12.dp))
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            AccesoRapidoCard(Icons.Filled.LocationOn, "Mi zona", "Estación cercana", Color(0xFF1565C0), Modifier.weight(1f))
-            AccesoRapidoCard(Icons.Filled.Search, "Buscar", "Por nombre", Color(0xFF00897B), Modifier.weight(1f))
+            AccesoRapidoCard(Icons.Filled.LocationOn, "Mi zona", "Estación cercana", blue, Modifier.weight(1f))
+            AccesoRapidoCard(Icons.Filled.Search, "Buscar", "Por nombre", greenBlue, Modifier.weight(1f))
         }
 
         Spacer(Modifier.height(12.dp))
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            AccesoRapidoCard(Icons.Filled.Map, "Mapa", "144 estaciones", Color(0xFF7B1FA2), Modifier.weight(1f))
-            AccesoRapidoCard(Icons.Filled.BarChart, "Historial", "Últimos 7 días", Color(0xFFE65100), Modifier.weight(1f))
+            AccesoRapidoCard(Icons.Filled.Map, "Mapa", "144 estaciones", violet, Modifier.weight(1f))
+            AccesoRapidoCard(Icons.Filled.BarChart, "Historial", "Últimos 7 días", orange, Modifier.weight(1f))
         }
 
         Spacer(Modifier.height(20.dp))
@@ -208,25 +208,7 @@ fun PantallaHome(navController: NavController, userViewModel: UserViewModel) {
     }
 }
 
-private fun colorIca(ica: Int?): Color = when {
-    ica == null -> Color(0xFF9E9E9E)
-    ica <= 50   -> Color(0xFF4CAF50)
-    ica <= 100  -> Color(0xFFFFC107)
-    ica <= 150  -> Color(0xFFFF9800)
-    ica <= 200  -> Color(0xFFF44336)
-    ica <= 300  -> Color(0xFF9C27B0)
-    else        -> Color(0xFF7B0000)
-}
 
-private fun etiquetaIca(ica: Int?): String = when {
-    ica == null -> "Sin datos"
-    ica <= 50   -> "Bueno"
-    ica <= 100  -> "Moderado"
-    ica <= 150  -> "Dañino sensibles"
-    ica <= 200  -> "Dañino"
-    ica <= 300  -> "Muy dañino"
-    else        -> "Peligroso"
-}
 
 @Composable
 private fun EstacionCard(estacion: EstacionResponse, etiquetaCercana: String? = null, onClick: () -> Unit) {
@@ -265,7 +247,7 @@ private fun EstacionCard(estacion: EstacionResponse, etiquetaCercana: String? = 
                             .background(MaterialTheme.colorScheme.surface)
                             .padding(2.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF4CAF50))
+                            .background(green)
                     )
                 }
             }
@@ -319,12 +301,12 @@ private fun IcaLegendaCard() {
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            IcaNivel("0 – 50", "Bueno", Color(0xFF4CAF50))
-            IcaNivel("51 – 100", "Moderado", Color(0xFFFFC107))
-            IcaNivel("101 – 150", "Dañino sensibles", Color(0xFFFF9800))
-            IcaNivel("151 – 200", "Dañino", Color(0xFFF44336))
-            IcaNivel("201 – 300", "Muy dañino", Color(0xFF9C27B0))
-            IcaNivel("300+", "Peligroso", Color(0xFF7B0000))
+            IcaNivel("0 – 50", "Bueno", green)
+            IcaNivel("51 – 100", "Moderado", yellow)
+            IcaNivel("101 – 150", "Dañino sensibles", orangeYellow)
+            IcaNivel("151 – 200", "Dañino", orangeRed)
+            IcaNivel("201 – 300", "Muy dañino", violet)
+            IcaNivel("300+", "Peligroso", red)
         }
     }
 }
