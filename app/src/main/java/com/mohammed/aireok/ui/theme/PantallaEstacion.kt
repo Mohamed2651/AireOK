@@ -143,17 +143,23 @@ fun PantallaEstacion(navController: NavController, uid: String, userViewModel: U
                         val esFav = uid in userViewModel.favoritosUids
                         IconButton(onClick = {
                             val e = estacion ?: return@IconButton
-                            userViewModel.toggleFavorito(uid, e)
-                            scope.launch {
-                                snackbarState.showSnackbar(
-                                    if (!esFav) "Añadido a favoritos" else "Eliminado de favoritos"
-                                )
+                            val seEstaaAnadiendo = !esFav
+                            userViewModel.toggleFavorito(uid, e) { ok ->
+                                scope.launch {
+                                    snackbarState.showSnackbar(
+                                        if (ok) {
+                                            if (seEstaaAnadiendo) "Añadido a favoritos" else "Eliminado de favoritos"
+                                        } else {
+                                            "No se pudo guardar el favorito. Esta estación puede no estar disponible."
+                                        }
+                                    )
+                                }
                             }
                         }) {
                             Icon(
                                 painterResource( if (esFav) R.drawable.baseline_favorite_24 else R.drawable.baseline_favorite_border_24),
                                 contentDescription = if (esFav) "Quitar favorito" else "Añadir favorito",
-                                tint = if (esFav) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                                tint = if (esFav) green else MaterialTheme.colorScheme.primary
                             )
                         }
                         IconButton(onClick = {

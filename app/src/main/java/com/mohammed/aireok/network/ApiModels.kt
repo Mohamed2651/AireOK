@@ -108,6 +108,11 @@ data class AgregarFavoritoRequest(
     @SerializedName("id_estacion") val idEstacion: String
 )
 
+// Recuperación de contraseña
+data class RecuperarPasswordRequest(val email: String)
+data class ResetPasswordRequest(val token: String, val password: String)
+data class MensajeResponse(val mensaje: String)
+
 // Incidencias — POST /api/incidencias, GET /api/incidencias/mis
 data class IncidenciaRequest(
     val tipo: String,

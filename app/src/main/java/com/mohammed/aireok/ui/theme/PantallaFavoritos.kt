@@ -148,7 +148,7 @@ private fun TarjetaFavorito(
                 )
             }
             IconButton(onClick = onEliminar) {
-                Icon(painterResource(R.drawable.baseline_favorite_24), "Quitar favorito", tint = MaterialTheme.colorScheme.error)
+                Icon(painterResource(R.drawable.baseline_favorite_24), "Quitar favorito", tint = green)
             }
         }
     }

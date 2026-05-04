@@ -12,10 +12,14 @@ interface ApiService {
     @POST("api/auth/registro")
     suspend fun registro(@Body request: RegistroRequest): UsuarioResponse
 
+    @POST("api/auth/recuperar")
+    suspend fun recuperarPassword(@Body request: RecuperarPasswordRequest): MensajeResponse
+
+    @POST("api/auth/reset-password")
+    suspend fun resetPassword(@Body request: ResetPasswordRequest): MensajeResponse
+
     @GET("api/auth/me")
     suspend fun me(): UsuarioResponse
-
-    // ── Aire (sin token) ──────────────────────────────────────────────────────
 
     @GET("api/aire/estaciones")
     suspend fun estaciones(): List<EstacionResponse>

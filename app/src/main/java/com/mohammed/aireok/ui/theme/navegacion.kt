@@ -24,6 +24,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -39,6 +40,8 @@ sealed class Pantalla(val ruta: String) {
     object Estacion : Pantalla("estacion/{uid}") {
         fun conUid(uid: String) = "estacion/$uid"
     }
+    object RecuperarPassword : Pantalla("recuperar-password")
+    object ResetPassword : Pantalla("reset-password")
 }
 
 private data class ItemNav(val ruta: String, val icono: ImageVector, val etiqueta: String)
@@ -61,8 +64,9 @@ private val rutasConShell = setOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Navegacion(modifier: Modifier) {
+fun Navegacion(modifier: Modifier, onNavControllerReady: (NavController) -> Unit = {}) {
     val navController = rememberNavController()
+    LaunchedEffect(navController) { onNavControllerReady(navController) }
     val userViewModel: UserViewModel = viewModel()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -110,6 +114,18 @@ fun Navegacion(modifier: Modifier) {
             ) {
                 composable(Pantalla.Login.ruta) { PantallaLogin(navController, userViewModel) }
                 composable(Pantalla.Registro.ruta) { PantallaRegistro(navController, userViewModel) }
+                composable(Pantalla.RecuperarPassword.ruta) { PantallaRecuperarPassword(navController, userViewModel) }
+                composable(
+                    route = "reset-password?token={token}",
+                    arguments = listOf(navArgument("token") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    }),
+                    deepLinks = listOf(navDeepLink { uriPattern = "aireok://reset-password?token={token}" })
+                ) { backStackEntry ->
+                    val token = backStackEntry.arguments?.getString("token") ?: ""
+                    PantallaResetPassword(navController, userViewModel, token)
+                }
                 composable(Pantalla.Home.ruta) { PantallaHome(navController, userViewModel) }
                 composable(Pantalla.Buscar.ruta) { PantallaBuscar(navController, userViewModel) }
                 composable(Pantalla.Mapa.ruta) { PantallaMapa(navController, userViewModel) }

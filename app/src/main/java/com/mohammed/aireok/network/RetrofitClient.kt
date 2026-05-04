@@ -6,7 +6,6 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-// Token en memoria — se rellena al login y se borra al logout
 object AuthHolder {
     var token: String = ""
 }

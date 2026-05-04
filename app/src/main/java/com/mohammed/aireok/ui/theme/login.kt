@@ -200,6 +200,18 @@ fun PantallaLogin(navController: NavController, userViewModel: UserViewModel) {
                         }
                     }
 
+                    Spacer(Modifier.height(12.dp))
+
+                    Text(
+                        "¿Olvidaste tu contraseña?",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        modifier = Modifier.clickable {
+                            navController.navigate(Pantalla.RecuperarPassword.ruta)
+                        }
+                    )
+
                     Spacer(Modifier.height(18.dp))
 
                     Row(

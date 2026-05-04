@@ -24,6 +24,20 @@ sealed class AuthState {
     data class Error(val message: String) : AuthState()
 }
 
+sealed class RecuperarState {
+    object Idle : RecuperarState()
+    object Loading : RecuperarState()
+    object Success : RecuperarState()
+    data class Error(val message: String) : RecuperarState()
+}
+
+sealed class ResetState {
+    object Idle : ResetState()
+    object Loading : ResetState()
+    object Success : ResetState()
+    data class Error(val message: String) : ResetState()
+}
+
 class UserViewModel(application: Application) : AndroidViewModel(application) {
 
     private val tokenManager = TokenManager(application)
@@ -205,6 +219,55 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // ── Recuperación de contraseña ────────────────────────────────────────────
+
+    var recuperarState: RecuperarState by mutableStateOf(RecuperarState.Idle)
+        private set
+    var resetState: ResetState by mutableStateOf(ResetState.Idle)
+        private set
+
+    fun recuperarPassword(email: String) {
+        viewModelScope.launch {
+            recuperarState = RecuperarState.Loading
+            try {
+                RetrofitClient.api.recuperarPassword(com.mohammed.aireok.network.RecuperarPasswordRequest(email))
+                recuperarState = RecuperarState.Success
+            } catch (e: HttpException) {
+                recuperarState = RecuperarState.Error(
+                    when (e.code()) {
+                        404 -> "Servicio no disponible temporalmente. Inténtalo más tarde."
+                        429 -> "Demasiados intentos. Espera unos minutos."
+                        else -> "Error del servidor (${e.code()}). Inténtalo de nuevo."
+                    }
+                )
+            } catch (e: Exception) {
+                recuperarState = RecuperarState.Error("Sin conexión. Comprueba tu red e inténtalo de nuevo.")
+            }
+        }
+    }
+
+    fun resetPassword(token: String, password: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            resetState = ResetState.Loading
+            try {
+                RetrofitClient.api.resetPassword(com.mohammed.aireok.network.ResetPasswordRequest(token, password))
+                resetState = ResetState.Success
+                onSuccess()
+            } catch (e: HttpException) {
+                val code = e.code()
+                resetState = ResetState.Error(
+                    if (code == 400) "Token inválido o expirado. Solicita uno nuevo."
+                    else "Error del servidor ($code)"
+                )
+            } catch (e: Exception) {
+                resetState = ResetState.Error("Sin conexión. Inténtalo de nuevo.")
+            }
+        }
+    }
+
+    fun limpiarRecuperar() { recuperarState = RecuperarState.Idle }
+    fun limpiarReset() { resetState = ResetState.Idle }
+
     // ── Favoritos ─────────────────────────────────────────────────────────────
 
     var favoritosUids: Set<String> by mutableStateOf(emptySet())
@@ -220,7 +283,7 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
 
     fun esFavorito(uid: String): Boolean = uid in favoritosUids
 
-    fun toggleFavorito(uid: String, estacion: EstacionResponse) {
+    fun toggleFavorito(uid: String, estacion: EstacionResponse, onResult: ((Boolean) -> Unit)? = null) {
         if (AuthHolder.token.isBlank()) return
         val eraFavorito = uid in favoritosUids
         // Actualización optimista
@@ -238,6 +301,7 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
                 } else {
                     RetrofitClient.api.agregarFavorito(AgregarFavoritoRequest(uid))
                 }
+                onResult?.invoke(true)
             } catch (_: Exception) {
                 // Revertir si la llamada falla
                 if (eraFavorito) {
@@ -247,6 +311,7 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
                     favoritosUids = favoritosUids - uid
                     estacionesFavoritas = estacionesFavoritas.filter { it.resolvedUid != uid }
                 }
+                onResult?.invoke(false)
             }
         }
     }
