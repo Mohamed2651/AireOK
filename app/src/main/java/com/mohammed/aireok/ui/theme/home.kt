@@ -73,6 +73,18 @@ fun PantallaHome(navController: NavController, userViewModel: UserViewModel) {
         )
     }
 
+    val loc = userLocation
+    val estacionesOrdenadas = if (loc != null) {
+        userViewModel.estaciones.sortedBy { e ->
+            val lat = e.latDouble ?: return@sortedBy Double.MAX_VALUE
+            val lon = e.lonDouble ?: return@sortedBy Double.MAX_VALUE
+            android.location.Location("").apply { latitude = lat; longitude = lon }
+                .let { loc.distanceTo(it).toDouble() }
+        }
+    } else {
+        userViewModel.estaciones
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -145,15 +157,35 @@ fun PantallaHome(navController: NavController, userViewModel: UserViewModel) {
         Spacer(Modifier.height(12.dp))
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            AccesoRapidoCard(Icons.Filled.LocationOn, "Mi zona", "Estación cercana", blue, Modifier.weight(1f))
-            AccesoRapidoCard(Icons.Filled.Search, "Buscar", "Por nombre", greenBlue, Modifier.weight(1f))
+            AccesoRapidoCard(Icons.Filled.LocationOn, "Mi zona", "Estación cercana", blue, Modifier.weight(1f)) {
+                estacionesOrdenadas.firstOrNull()?.let { navController.navigate(Pantalla.Estacion.conUid(it.resolvedUid)) }
+            }
+            AccesoRapidoCard(Icons.Filled.Search, "Buscar", "Por nombre", greenBlue, Modifier.weight(1f)) {
+                navController.navigate(Pantalla.Buscar.ruta) {
+                    popUpTo(Pantalla.Home.ruta) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
         }
 
         Spacer(Modifier.height(12.dp))
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            AccesoRapidoCard(Icons.Filled.Map, "Mapa", "144 estaciones", violet, Modifier.weight(1f))
-            AccesoRapidoCard(Icons.Filled.BarChart, "Historial", "Últimos 7 días", orange, Modifier.weight(1f))
+            AccesoRapidoCard(Icons.Filled.Map, "Mapa", "Ver el mapa", violet, Modifier.weight(1f)) {
+                navController.navigate(Pantalla.Mapa.ruta) {
+                    popUpTo(Pantalla.Home.ruta) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+            AccesoRapidoCard(Icons.Filled.Favorite, "Favoritos", "Tus estaciones", orangeRed, Modifier.weight(1f)) {
+                navController.navigate(Pantalla.Favoritos.ruta) {
+                    popUpTo(Pantalla.Home.ruta) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
         }
 
         Spacer(Modifier.height(20.dp))
@@ -176,17 +208,6 @@ fun PantallaHome(navController: NavController, userViewModel: UserViewModel) {
             Text(userViewModel.errorEstaciones!!, color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
         }
 
-        val loc = userLocation
-        val estacionesOrdenadas = if (loc != null) {
-            userViewModel.estaciones.sortedBy { e ->
-                val lat = e.latDouble ?: return@sortedBy Double.MAX_VALUE
-                val lon = e.lonDouble ?: return@sortedBy Double.MAX_VALUE
-                android.location.Location("").apply { latitude = lat; longitude = lon }
-                    .let { loc.distanceTo(it).toDouble() }
-            }
-        } else {
-            userViewModel.estaciones
-        }
         estacionesOrdenadas.forEachIndexed { index, estacion ->
             val etiquetaCercana: String? = if (index == 0 && loc != null) {
                 val lat = estacion.latDouble
@@ -330,10 +351,12 @@ private fun AccesoRapidoCard(
     titulo: String,
     subtitulo: String,
     color: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     Card(
         modifier = modifier,
+        onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)

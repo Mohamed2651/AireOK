@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -289,7 +290,7 @@ private fun TarjetaEstacionMapa(
         elevation = CardDefaults.cardElevation(8.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -350,7 +351,7 @@ private fun TarjetaEstacionMapa(
             }
 
             // Acciones
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 IconButton(
                     onClick = onCerrar,
                     modifier = Modifier
@@ -362,10 +363,11 @@ private fun TarjetaEstacionMapa(
                 IconButton(
                     onClick = onVerDetalle,
                     modifier = Modifier
+                        .padding(top = 10.dp)
                         .size(32.dp)
                         .background(MaterialTheme.colorScheme.primary, CircleShape)
                 ) {
-                    Icon(Icons.Filled.ArrowForward, "Ver detalle", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, "Ver detalle", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp))
                 }
             }
         }

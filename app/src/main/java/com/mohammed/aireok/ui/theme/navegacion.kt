@@ -192,13 +192,7 @@ private fun AireOKBottomNav(navController: NavController, currentRoute: String?)
             NavigationBarItem(
                 selected = seleccionado,
                 onClick = {
-                    if (currentRoute != item.ruta) {
-                        navController.navigate(item.ruta) {
-                            popUpTo(Pantalla.Home.ruta) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
+                    if (currentRoute != item.ruta) navToTab(navController, item.ruta)
                 },
                 icon = { Icon(item.icono, item.etiqueta) },
                 label = { Text(item.etiqueta, fontSize = 11.sp) },
@@ -210,6 +204,20 @@ private fun AireOKBottomNav(navController: NavController, currentRoute: String?)
                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             )
+        }
+    }
+}
+
+private fun navToTab(navController: NavController, ruta: String) {
+    if (ruta == Pantalla.Home.ruta) {
+        if (!navController.popBackStack(Pantalla.Home.ruta, inclusive = false)) {
+            navController.navigate(Pantalla.Home.ruta)
+        }
+    } else {
+        navController.navigate(ruta) {
+            popUpTo(Pantalla.Home.ruta) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
         }
     }
 }
@@ -300,13 +308,7 @@ private fun MenuLateral(
                 selected = currentRoute == item.ruta,
                 onClick = {
                     scope.launch { drawerState.close() }
-                    if (currentRoute != item.ruta) {
-                        navController.navigate(item.ruta) {
-                            popUpTo(Pantalla.Home.ruta) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
+                    if (currentRoute != item.ruta) navToTab(navController, item.ruta)
                 },
                 colors = NavigationDrawerItemDefaults.colors(
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,

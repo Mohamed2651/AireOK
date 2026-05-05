@@ -27,12 +27,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.mohammed.aireok.network.EstacionBusquedaResponse
+import kotlinx.coroutines.delay
 
 @Composable
 fun PantallaBuscar(navController: NavController, userViewModel: UserViewModel) {
     var consulta by remember { mutableStateOf("") }
     var yaBuscado by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(consulta) {
+        if (consulta.trim().isNotEmpty()) {
+            delay(300)
+            yaBuscado = true
+            userViewModel.buscarEstaciones(consulta.trim())
+        } else {
+            yaBuscado = false
+            userViewModel.limpiarBusqueda()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -47,7 +59,7 @@ fun PantallaBuscar(navController: NavController, userViewModel: UserViewModel) {
             leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
             trailingIcon = {
                 if (consulta.isNotEmpty()) {
-                    IconButton(onClick = { consulta = ""; yaBuscado = false; userViewModel.limpiarBusqueda() }) {
+                    IconButton(onClick = { consulta = "" }) {
                         Icon(Icons.Filled.Clear, "Limpiar", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
@@ -55,11 +67,7 @@ fun PantallaBuscar(navController: NavController, userViewModel: UserViewModel) {
             singleLine = true,
             shape = RoundedCornerShape(14.dp),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = {
-                focusManager.clearFocus()
-                yaBuscado = true
-                userViewModel.buscarEstaciones(consulta.trim())
-            }),
+            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor   = MaterialTheme.colorScheme.primary,
                 unfocusedBorderColor = MaterialTheme.colorScheme.outline,
@@ -68,23 +76,6 @@ fun PantallaBuscar(navController: NavController, userViewModel: UserViewModel) {
                 unfocusedTextColor   = MaterialTheme.colorScheme.onSurface,
             )
         )
-
-        Spacer(Modifier.height(8.dp))
-
-        Button(
-            onClick = {
-                focusManager.clearFocus()
-                yaBuscado = true
-                userViewModel.buscarEstaciones(consulta.trim())
-            },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-        ) {
-            Icon(Icons.Filled.Search, null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(8.dp))
-            Text("Buscar")
-        }
 
         Spacer(Modifier.height(16.dp))
 

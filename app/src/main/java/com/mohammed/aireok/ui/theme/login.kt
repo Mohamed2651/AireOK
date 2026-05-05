@@ -152,7 +152,7 @@ fun PantallaLogin(navController: NavController, userViewModel: UserViewModel) {
 
                     OutlinedTextField(
                         value = userViewModel.password,
-                        onValueChange = { userViewModel.actualizarPassword(it) },
+                        onValueChange = { userViewModel.actualizarPassword(it.trim()) },
                         label = { Text("Contraseña") },
                         leadingIcon = { Icon(Icons.Outlined.Lock, null, tint = MaterialTheme.colorScheme.primary) },
                         visualTransformation = if (passwordHidden) PasswordVisualTransformation() else VisualTransformation.None,
