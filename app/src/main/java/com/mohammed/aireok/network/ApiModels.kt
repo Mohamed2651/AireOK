@@ -101,7 +101,7 @@ data class PreferenciasRequest(
 )
 
 // Perfil — PUT /api/usuario/perfil
-data class ActualizarPerfilRequest(val nombre: String)
+data class ActualizarPerfilRequest(val nombre: String, val email: String? = null)
 
 // Favoritos — POST /api/usuario/favoritos
 data class AgregarFavoritoRequest(

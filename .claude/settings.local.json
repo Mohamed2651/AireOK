@@ -5,7 +5,15 @@
       "Bash(./gradlew assembleDebug)",
       "Bash(curl *)",
       "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); print\\(f'Total estaciones: {len\\(data\\)}'\\); madrid=[e for e in data if 'madrid' in e.get\\('nombre',''\\).lower\\(\\)]; valencia=[e for e in data if 'valencia' in e.get\\('nombre',''\\).lower\\(\\)]; print\\(f'Madrid: {len\\(madrid\\)}, Valencia: {len\\(valencia\\)}'\\); print\\('\\\\nPrimeras 5:'\\); [print\\(e\\) for e in data[:5]]\")",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Mohammed\\\\AireOK\" -Recurse -Directory -Name)",
+      "Bash(Select-Object -First 20)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Mohammed\\\\AireOK\" -Recurse -Force)",
+      "Bash(Select-Object FullName, PSIsContainer)",
+      "Bash(ConvertTo-Json -Depth 100)",
+      "Bash(Out-String)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Mohammed\\\\AireOK\" -Recurse -Force | ForEach-Object { $_.FullName } | Sort-Object)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Mohammed\\\\AireOK\" -Recurse -Directory | Where-Object { $_.Name -match \"^\\(ui|presentation|data\\)$\" } | Select-Object -ExpandProperty FullName)"
     ]
   }
 }

@@ -1,5 +1,7 @@
 package com.mohammed.aireok.network
 
+import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.*
 
 interface ApiService {
@@ -16,7 +18,7 @@ interface ApiService {
     suspend fun recuperarPassword(@Body request: RecuperarPasswordRequest): MensajeResponse
 
     @POST("api/auth/reset-password")
-    suspend fun resetPassword(@Body request: ResetPasswordRequest): MensajeResponse
+    suspend fun resetPassword(@Body request: ResetPasswordRequest): Response<ResponseBody>
 
     @GET("api/auth/me")
     suspend fun me(): UsuarioResponse
