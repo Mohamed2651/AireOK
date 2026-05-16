@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,6 +22,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -35,8 +38,10 @@ fun PerfilScreen(
     viewModel: PerfilViewModel = hiltViewModel()
 ) {
     var modoEdicion by remember { mutableStateOf(false) }
-    var nombreEditar by remember { mutableStateOf("") }
-    var emailEditar by remember { mutableStateOf("") }
+    var nombreEditar by rememberSaveable { mutableStateOf("") }
+    var emailEditar by rememberSaveable { mutableStateOf("") }
+    var passwordEditar by rememberSaveable { mutableStateOf("") }
+    var passwordVisible by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(viewModel.perfilState) {
         if (viewModel.perfilState is PerfilUiState.Success) {
@@ -104,6 +109,7 @@ fun PerfilScreen(
 
             val emailValido = emailEditar.trim().isNotBlank() &&
                 android.util.Patterns.EMAIL_ADDRESS.matcher(emailEditar.trim()).matches()
+            val emailCambiado = emailEditar.trim() != viewModel.email
 
             OutlinedTextField(
                 value = emailEditar, onValueChange = { emailEditar = it },
@@ -118,6 +124,27 @@ fun PerfilScreen(
                 }
             )
 
+            if (emailCambiado && emailValido) {
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = passwordEditar,
+                    onValueChange = { passwordEditar = it },
+                    label = { Text("Contraseña actual (para cambiar email)") },
+                    leadingIcon = { Icon(Icons.Filled.Lock, null) },
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                null, tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    singleLine = true, modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp), colors = colores
+                )
+            }
+
             if (viewModel.perfilState is PerfilUiState.Error) {
                 Text(
                     text = (viewModel.perfilState as PerfilUiState.Error).message,
@@ -128,14 +155,18 @@ fun PerfilScreen(
 
             Spacer(Modifier.height(20.dp))
 
+            val puedeGuardar = nombreEditar.isNotBlank() && emailValido &&
+                (!emailCambiado || passwordEditar.isNotBlank()) &&
+                viewModel.perfilState !is PerfilUiState.Loading
+
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(
                     onClick = { modoEdicion = false; viewModel.resetPerfilState() },
                     modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)
                 ) { Text("Cancelar") }
                 Button(
-                    onClick = { viewModel.actualizarPerfil(nombreEditar, emailEditar.trim()) },
-                    enabled = nombreEditar.isNotBlank() && emailValido && viewModel.perfilState !is PerfilUiState.Loading,
+                    onClick = { viewModel.guardarPerfil(nombreEditar, emailEditar.trim(), passwordEditar) },
+                    enabled = puedeGuardar,
                     modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)
                 ) {
                     if (viewModel.perfilState is PerfilUiState.Loading) {
@@ -153,7 +184,13 @@ fun PerfilScreen(
             ) {
                 Text("Información de cuenta", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 IconButton(
-                    onClick = { nombreEditar = viewModel.nombre; emailEditar = viewModel.email; viewModel.resetPerfilState(); modoEdicion = true },
+                    onClick = {
+                        nombreEditar = viewModel.nombre
+                        emailEditar = viewModel.email
+                        passwordEditar = ""
+                        viewModel.resetPerfilState()
+                        modoEdicion = true
+                    },
                     modifier = Modifier.size(36.dp)
                 ) {
                     Icon(Icons.Filled.Edit, "Editar perfil", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))

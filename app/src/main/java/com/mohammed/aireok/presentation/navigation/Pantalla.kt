@@ -15,4 +15,6 @@ sealed class Pantalla(val ruta: String) {
     }
     object RecuperarPassword : Pantalla("recuperar-password")
     object ResetPassword : Pantalla("reset-password")
+    object CambiarEmail : Pantalla("cambiar-email")
+    object CambiarPassword : Pantalla("cambiar-password")
 }

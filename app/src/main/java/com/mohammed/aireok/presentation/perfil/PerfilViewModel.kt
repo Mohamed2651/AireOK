@@ -1,5 +1,6 @@
 package com.mohammed.aireok.presentation.perfil
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -34,7 +35,7 @@ class PerfilViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             authUseCase.currentUser.collect { user ->
-                if (user != null && nombre.isBlank()) {
+                if (user != null) {
                     nombre = user.nombre
                     email = user.email
                 }
@@ -42,21 +43,27 @@ class PerfilViewModel @Inject constructor(
         }
     }
 
-    fun actualizarPerfil(nuevoNombre: String, nuevoEmail: String) {
+    fun guardarPerfil(nuevoNombre: String, nuevoEmail: String, password: String) {
         viewModelScope.launch {
             perfilState = PerfilUiState.Loading
             try {
-                val updated = userUseCase.actualizarPerfil(nuevoNombre, nuevoEmail)
-                nombre = updated.nombre
-                email = updated.email
+                val nombreCambiado = nuevoNombre != nombre
+                val emailCambiado = nuevoEmail.trim() != email
+                if (nombreCambiado) {
+                    userUseCase.actualizarPerfil(nuevoNombre, email)
+                    nombre = nuevoNombre
+                }
+                if (emailCambiado) {
+                    userUseCase.cambiarEmail(nuevoEmail.trim(), password)
+                    email = nuevoEmail.trim()
+                }
                 perfilState = PerfilUiState.Success
             } catch (e: Exception) {
+                Log.e("PerfilViewModel", "Error al actualizar el perfil", e)
                 perfilState = PerfilUiState.Error("Error al actualizar el perfil")
             }
         }
     }
 
-    fun resetPerfilState() {
-        perfilState = PerfilUiState.Idle
-    }
+    fun resetPerfilState() { perfilState = PerfilUiState.Idle }
 }

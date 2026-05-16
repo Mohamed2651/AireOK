@@ -20,4 +20,10 @@ class UserUseCaseImpl @Inject constructor(
     override suspend fun agregarFavorito(idEstacion: String) = repository.agregarFavorito(idEstacion)
 
     override suspend fun eliminarFavorito(idEstacion: String) = repository.eliminarFavorito(idEstacion)
+
+    override suspend fun cambiarEmail(nuevoEmail: String, password: String) =
+        repository.cambiarEmail(nuevoEmail, password)
+
+    override suspend fun cambiarPassword(passwordActual: String, passwordNueva: String) =
+        repository.cambiarPassword(passwordActual, passwordNueva)
 }

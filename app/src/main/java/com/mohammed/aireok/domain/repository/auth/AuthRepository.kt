@@ -11,4 +11,5 @@ interface AuthRepository {
     suspend fun recuperarPassword(email: String)
     suspend fun resetPassword(token: String, password: String): Boolean
     suspend fun me(): UserEntity
+    fun updateCurrentUser(user: UserEntity)
 }

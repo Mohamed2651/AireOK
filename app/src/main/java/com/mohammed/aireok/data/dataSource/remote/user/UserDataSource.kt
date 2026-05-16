@@ -8,4 +8,6 @@ interface UserDataSource {
     suspend fun obtenerFavoritos(): List<EstacionDto>
     suspend fun agregarFavorito(idEstacion: String)
     suspend fun eliminarFavorito(idEstacion: String)
+    suspend fun cambiarEmail(nuevoEmail: String, password: String)
+    suspend fun cambiarPassword(passwordActual: String, passwordNueva: String)
 }

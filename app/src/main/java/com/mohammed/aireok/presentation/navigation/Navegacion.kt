@@ -37,6 +37,8 @@ import com.mohammed.aireok.presentation.estacion.detail.EstacionDetailScreen
 import com.mohammed.aireok.presentation.estacion.home.HomeScreen
 import com.mohammed.aireok.presentation.estacion.mapa.MapaScreen
 import com.mohammed.aireok.presentation.favoritos.FavoritosScreen
+import com.mohammed.aireok.presentation.perfil.CambiarEmailScreen
+import com.mohammed.aireok.presentation.perfil.CambiarPasswordScreen
 import com.mohammed.aireok.presentation.perfil.PerfilScreen
 import com.mohammed.aireok.ui.theme.greenBlue
 import kotlinx.coroutines.CoroutineScope
@@ -141,6 +143,12 @@ fun Navegacion(modifier: Modifier, onNavControllerReady: (NavController) -> Unit
                             sessionViewModel.logout()
                         }
                     )
+                }
+                composable(Pantalla.CambiarEmail.ruta) {
+                    CambiarEmailScreen(navController = navController)
+                }
+                composable(Pantalla.CambiarPassword.ruta) {
+                    CambiarPasswordScreen(navController = navController)
                 }
                 composable(Pantalla.Consejos.ruta) { ConsejosScreen() }
                 composable(Pantalla.Favoritos.ruta) {

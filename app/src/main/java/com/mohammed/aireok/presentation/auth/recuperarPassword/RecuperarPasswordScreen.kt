@@ -57,7 +57,7 @@ fun RecuperarPasswordScreen(
     ) {
         IconButton(
             onClick = { navController.popBackStack() },
-            modifier = Modifier.align(Alignment.TopStart).padding(top = 16.dp, start = 8.dp)
+            modifier = Modifier.align(Alignment.TopStart).statusBarsPadding().padding(start = 8.dp)
         ) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver", tint = Color.White)
         }

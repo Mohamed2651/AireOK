@@ -54,4 +54,8 @@ class AuthRepositoryImpl @Inject constructor(
         _currentUser.value = user
         user
     } catch (e: Exception) { throw errorHandler.handle(e) }
+
+    override fun updateCurrentUser(user: UserEntity) {
+        _currentUser.value = user
+    }
 }
