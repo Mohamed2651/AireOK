@@ -23,12 +23,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Arranque en frío desde deep link (app no estaba en memoria)
-        if (savedInstanceState == null) {
-            val data = intent.data
-            if (data?.scheme == "aireok" && data.host == "reset-password") {
-                pendingResetToken = data.getQueryParameter("token") ?: ""
-            }
+        val data = intent.data
+        if (data?.scheme == "aireok" && data.host == "reset-password") {
+            pendingResetToken = data.getQueryParameter("token")?.takeIf { it.isNotEmpty() }
         }
         enableEdgeToEdge()
         setContent {
@@ -36,20 +33,8 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { _ ->
                     Navegacion(
                         modifier = Modifier,
-                        onNavControllerReady = { nc ->
-                            navController = nc
-                            val token = pendingResetToken
-                            if (token != null) {
-                                pendingResetToken = null
-                                // Si NavHost ya manejó el deep link, currentDestination
-                                // apuntará a reset-password; en ese caso no navegar de nuevo
-                                if (nc.currentDestination?.route?.startsWith("reset-password") != true) {
-                                    nc.navigate("reset-password?token=${Uri.encode(token)}") {
-                                        launchSingleTop = true
-                                    }
-                                }
-                            }
-                        }
+                        pendingResetToken = pendingResetToken,
+                        onNavControllerReady = { nc -> navController = nc }
                     )
                 }
             }

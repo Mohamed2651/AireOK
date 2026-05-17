@@ -1,5 +1,6 @@
 package com.mohammed.aireok.presentation.navigation
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -60,7 +61,11 @@ private val rutasConShell = setOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Navegacion(modifier: Modifier, onNavControllerReady: (NavController) -> Unit = {}) {
+fun Navegacion(
+    modifier: Modifier,
+    pendingResetToken: String? = null,
+    onNavControllerReady: (NavController) -> Unit = {}
+) {
     val navController = rememberNavController()
     LaunchedEffect(navController) { onNavControllerReady(navController) }
 
@@ -102,7 +107,10 @@ fun Navegacion(modifier: Modifier, onNavControllerReady: (NavController) -> Unit
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = Pantalla.Splash.ruta,
+                startDestination = if (pendingResetToken != null)
+                    "reset-password?token=${Uri.encode(pendingResetToken)}"
+                else
+                    Pantalla.Splash.ruta,
                 modifier = if (mostrarShell) Modifier.padding(innerPadding) else Modifier
             ) {
                 composable(Pantalla.Splash.ruta) {
